@@ -10,6 +10,8 @@ public:
 
     Vector2D operator+(const Vector2D &other) const;
     Vector2D operator-(const Vector2D &other) const;
+    Vector2D operator*(int scalar) const;
+    int dotProduct(const Vector2D &other) const;
 };
 
 class Vector3D

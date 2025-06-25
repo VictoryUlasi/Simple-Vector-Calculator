@@ -1,3 +1,4 @@
+#define NOMINMAX
 #include <iostream>
 #include <vector>
 #include <string>
@@ -8,16 +9,25 @@
 #include <conio.h>   // For getch() to capture keyboard input
 #include "vector.hpp"
 
-std::pair<int, int> readLine(std::string &line);
+#define UPPER_MENU_BOUND 5
+#define LOWER_MENU_BOUND 0
+
+struct selectionResult
+{
+    Vector2D resultantVector;
+    int resultantScalar;
+    bool isScalar = false;
+};
+
+std::pair<int, int> readVector(std::string &line);
 bool checkNum(std::string &element);
 void displayMenu();
-std::pair<int, int> performSelection(int userSelection);
+selectionResult performSelection(int userSelection);
 void ClearScreen();
 
 int main()
 {
-    std::string userSelection;
-    std::pair<int, int> resultantVector;
+    unsigned int userSelection;
 
     do
     {
@@ -25,25 +35,40 @@ int main()
         displayMenu();
 
         std::cout << "Option: ";
-        std::getline(std::cin, userSelection);
-        if (!checkNum(userSelection))
+        std::cin >> userSelection;
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+        while (!std::cin.good())
         {
-            std::cout << "Bad Input\n";
-            userSelection = "-1";
-            continue;
+            std::cin.clear();
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            userSelection = -1;
         }
-        if ((std::stoi(userSelection) > 0) && (std::stoi(userSelection) < 3)) // IF YOU ADD MORE MENU ITEMS CHANGE THE BOUNDS :) TRASH IMPLEMENTATION IK
+        if ((userSelection > LOWER_MENU_BOUND) && (userSelection < UPPER_MENU_BOUND)) // IF YOU ADD MORE MENU ITEMS CHANGE THE BOUNDS :) TRASH IMPLEMENTATION IK
         {
-            resultantVector = performSelection(stoi(userSelection));
-            std::cout << "Resultant Vector: " << "[" << resultantVector.first << ", " << resultantVector.second << "]" << std::endl;
-            getch();
+            auto result = performSelection(userSelection);
+            if (result.isScalar)
+            {
+                ClearScreen();
+                std::cout << "Resultant Scalar: " << "[" << result.resultantScalar << "]" << std::endl;
+                _getch();
+            }
+            else
+            {
+                ClearScreen();
+                std::cout << "Resultant Vector: " << "[" << result.resultantVector.x << ", " << result.resultantVector.y << "]" << std::endl;
+                _getch();
+            }
+
+            std::cin.clear();
+            std::cin.ignore(10000, '\n');
         }
 
-    } while (std::stoi(userSelection) != 0);
+    } while (userSelection != 0);
     return 0;
 }
 
-std::pair<int, int> readLine(std::string &line)
+std::pair<int, int> readVector(std::string &line)
 {
     std::string x1;
     std::string x2;
@@ -85,46 +110,74 @@ void displayMenu()
     std::cout << "----SIMPLE VECTOR CALCULATOR----" << std::endl;
     std::cout << "1. Vector Addition" << std::endl;
     std::cout << "2. Vector Subtraction" << std::endl;
+    std::cout << "3. Vector Multiplication" << std::endl;
+    std::cout << "4. Dot Product" << std::endl;
     std::cout << "0. Exit" << std::endl;
 }
 
-std::pair<int, int> performSelection(int userSelection)
+selectionResult performSelection(int userSelection)
 {
     std::string line;
-    Vector2D resultantVector;
+    selectionResult resultant;
     Vector2D vectorUno;
     Vector2D vectorDos;
+    int scalar; // Used in case 3 and 4 for 2 different things
     switch (userSelection)
     {
     case 1:
         std::cout << "Enter the First vector: ";
         std::getline(std::cin, line);
-        vectorUno.x = readLine(line).first;
-        vectorUno.y = readLine(line).second;
+        vectorUno.x = readVector(line).first;
+        vectorUno.y = readVector(line).second;
 
         std::cout << "Enter the Second vector: ";
         std::getline(std::cin, line);
-        vectorDos.x = readLine(line).first;
-        vectorDos.y = readLine(line).second;
+        vectorDos.x = readVector(line).first;
+        vectorDos.y = readVector(line).second;
 
-        resultantVector = vectorUno + vectorDos;
+        resultant.resultantVector = vectorUno + vectorDos;
         break;
     case 2:
         std::cout << "Enter the First vector: ";
         std::getline(std::cin, line);
-        vectorUno.x = readLine(line).first;
-        vectorUno.y = readLine(line).second;
+        vectorUno.x = readVector(line).first;
+        vectorUno.y = readVector(line).second;
 
         std::cout << "Enter the Second vector: ";
         std::getline(std::cin, line);
-        vectorDos.x = readLine(line).first;
-        vectorDos.y = readLine(line).second;
+        vectorDos.x = readVector(line).first;
+        vectorDos.y = readVector(line).second;
 
-        resultantVector = vectorUno - vectorDos;
+        resultant.resultantVector = vectorUno - vectorDos;
+        break;
+    case 3:
+        std::cout << "Enter the vector: ";
+        std::getline(std::cin, line);
+        vectorUno.x = readVector(line).first;
+        vectorUno.y = readVector(line).second;
+
+        std::cout << "Enter the Scalar: ";
+        std::cin >> scalar;
+
+        resultant.resultantVector = vectorUno * scalar;
+        break;
+    case 4:
+        std::cout << "Enter the First vector: ";
+        std::getline(std::cin, line);
+        vectorUno.x = readVector(line).first;
+        vectorUno.y = readVector(line).second;
+
+        std::cout << "Enter the Second vector: ";
+        std::getline(std::cin, line);
+        vectorDos.x = readVector(line).first;
+        vectorDos.y = readVector(line).second;
+
+        resultant.resultantScalar = vectorUno.dotProduct(vectorDos); // How to project this to screen? can only return pair
+        resultant.isScalar = true;
         break;
     }
 
-    return {resultantVector.x, resultantVector.y};
+    return resultant;
 }
 
 void ClearScreen()
