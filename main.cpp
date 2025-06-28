@@ -19,6 +19,7 @@ struct selectionResult
     int resultantScalar;
     bool isScalar = false;
     bool is3D = false;
+    std::pair<bool, std::string> errFlag = {false, ""};
 };
 
 struct vectorInput
@@ -58,25 +59,33 @@ int main()
         if ((userSelection > LOWER_MENU_BOUND) && (userSelection < UPPER_MENU_BOUND)) // IF YOU ADD MORE MENU ITEMS CHANGE THE BOUNDS :) TRASH IMPLEMENTATION IK
         {
             auto result = performSelection(userSelection);
-            if (result.isScalar)
+
+            if (result.errFlag.first)
             {
-                ClearScreen();
-                std::cout << "Resultant Scalar: " << "[" << result.resultantScalar << "]" << std::endl;
-                _getch();
+                std::cout << result.errFlag.second << std::endl;
             }
             else
             {
-                if (result.is3D)
+                if (result.isScalar)
                 {
                     ClearScreen();
-                    std::cout << "Resultant Vector: " << "[" << result.resultantVector3D_.x << ", " << result.resultantVector3D_.y << ", " << result.resultantVector3D_.z << "]" << std::endl;
+                    std::cout << "Resultant Scalar: " << "[" << result.resultantScalar << "]" << std::endl;
                     _getch();
                 }
                 else
                 {
-                    ClearScreen();
-                    std::cout << "Resultant Vector: " << "[" << result.resultantVector2D_.x << ", " << result.resultantVector2D_.y << "]" << std::endl;
-                    _getch();
+                    if (result.is3D)
+                    {
+                        ClearScreen();
+                        std::cout << "Resultant Vector: " << "[" << result.resultantVector3D_.x << ", " << result.resultantVector3D_.y << ", " << result.resultantVector3D_.z << "]" << std::endl;
+                        _getch();
+                    }
+                    else
+                    {
+                        ClearScreen();
+                        std::cout << "Resultant Vector: " << "[" << result.resultantVector2D_.x << ", " << result.resultantVector2D_.y << "]" << std::endl;
+                        _getch();
+                    }
                 }
             }
 
@@ -100,7 +109,7 @@ vectorInput readVector(std::string &line)
     std::getline(ss, x1, ' ');
     if (!checkNum(x1))
     {
-        std::cout << "Enter Integers Only!";
+        std::cout << "Enter Integers Only!" << std::endl;
         exit(EXIT_FAILURE);
     }
     vector.x = std::stoi(x1);
@@ -108,16 +117,16 @@ vectorInput readVector(std::string &line)
     std::getline(ss, x2, ' ');
     if (!checkNum(x2))
     {
-        std::cout << "Enter Integers Only!";
+        std::cout << "Enter Integers Only!" << std::endl;
         exit(EXIT_FAILURE);
     }
     vector.y = std::stoi(x2);
 
     if (std::getline(ss, x3, ' '))
     {
-        if (!checkNum(x2))
+        if (!checkNum(x3))
         {
-            std::cout << "Enter Integers Only!";
+            std::cout << "Enter Integers Only!" << std::endl;
             exit(EXIT_FAILURE);
         }
         vector.z = std::stoi(x3);
@@ -184,14 +193,23 @@ selectionResult performSelection(int userSelection)
         std::getline(std::cin, line);
         vectorDos = readVector(line);
 
-        if (vectorUno.is3D && vectorDos.is3D)
+        if ((vectorUno.is3D && !vectorDos.is3D) || (!vectorUno.is3D && vectorDos.is3D))
         {
-            resultant.resultantVector3D_ = vectorUno.vector3D_ + vectorDos.vector3D_;
-            resultant.is3D = true;
+            resultant.errFlag.first = true;
+            resultant.errFlag.second = "Vectors Have to Be the Same Dimensions";
         }
-        else
+
+        if (!resultant.errFlag.first)
         {
-            resultant.resultantVector2D_ = vectorUno.vector2D_ + vectorDos.vector2D_;
+            if (vectorUno.is3D && vectorDos.is3D) // repetetive, errFlag already checks if vectors are the same, But Works for now.
+            {
+                resultant.resultantVector3D_ = vectorUno.vector3D_ + vectorDos.vector3D_;
+                resultant.is3D = true;
+            }
+            else
+            {
+                resultant.resultantVector2D_ = vectorUno.vector2D_ + vectorDos.vector2D_;
+            }
         }
 
         break;
@@ -204,14 +222,23 @@ selectionResult performSelection(int userSelection)
         std::getline(std::cin, line);
         vectorDos = readVector(line);
 
-        if (vectorUno.is3D && vectorDos.is3D)
+        if ((vectorUno.is3D && !vectorDos.is3D) || (!vectorUno.is3D && vectorDos.is3D))
         {
-            resultant.resultantVector3D_ = vectorUno.vector3D_ - vectorDos.vector3D_;
-            resultant.is3D = true;
+            resultant.errFlag.first = true;
+            resultant.errFlag.second = "Vectors Have to Be the Same Dimensions";
         }
-        else
+
+        if (!resultant.errFlag.first)
         {
-            resultant.resultantVector2D_ = vectorUno.vector2D_ - vectorDos.vector2D_;
+            if (vectorUno.is3D && vectorDos.is3D) // repetetive, errFlag already checks if vectors are the same, But Works for now.
+            {
+                resultant.resultantVector3D_ = vectorUno.vector3D_ - vectorDos.vector3D_;
+                resultant.is3D = true;
+            }
+            else
+            {
+                resultant.resultantVector2D_ = vectorUno.vector2D_ - vectorDos.vector2D_;
+            }
         }
 
         break;
@@ -243,16 +270,25 @@ selectionResult performSelection(int userSelection)
         std::getline(std::cin, line);
         vectorDos = readVector(line);
 
-        if (vectorUno.is3D && vectorDos.is3D)
+        if ((vectorUno.is3D && !vectorDos.is3D) || (!vectorUno.is3D && vectorDos.is3D))
         {
-            resultant.resultantScalar = vectorUno.vector3D_.dotProduct(vectorDos.vector3D_);
-        }
-        else
-        {
-            resultant.resultantScalar = vectorUno.vector2D_.dotProduct(vectorDos.vector2D_);
+            resultant.errFlag.first = true;
+            resultant.errFlag.second = "Vectors Have to Be the Same Dimensions";
         }
 
-        resultant.isScalar = true;
+        if (!resultant.errFlag.first)
+        {
+            if (vectorUno.is3D && vectorDos.is3D) // repetetive, errFlag already checks if vectors are the same, But Works for now.
+            {
+                resultant.resultantScalar = vectorUno.vector3D_.dotProduct(vectorDos.vector3D_);
+            }
+            else
+            {
+                resultant.resultantScalar = vectorUno.vector2D_.dotProduct(vectorDos.vector2D_);
+            }
+            resultant.isScalar = true;
+        }
+
         break;
     case 5:
         std::cout << "Enter the First vector: ";
@@ -263,13 +299,22 @@ selectionResult performSelection(int userSelection)
         std::getline(std::cin, line);
         vectorDos = readVector(line);
 
-        if (vectorUno.is3D && vectorDos.is3D)
+        if ((vectorUno.is3D && !vectorDos.is3D) || (!vectorUno.is3D && vectorDos.is3D))
         {
-            resultant.resultantVector3D_ = vectorUno.vector3D_.crossProduct(vectorDos.vector3D_);
-            resultant.is3D = true;
+            resultant.errFlag.first = true;
+            resultant.errFlag.second = "Vectors Have to Be the Same Dimensions";
         }
-        else
-            std::cout << "Cross Product Only On 3D vectors.";
+
+        if (!resultant.errFlag.first)
+        {
+            if (vectorUno.is3D && vectorDos.is3D) // repetetive, errFlag already checks if vectors are the same, But Works for now.
+            {
+                resultant.resultantVector3D_ = vectorUno.vector3D_.crossProduct(vectorDos.vector3D_);
+                resultant.is3D = true;
+            }
+            else
+                std::cout << "Cross Product Only On 3D vectors.";
+        }
 
         break;
     }
