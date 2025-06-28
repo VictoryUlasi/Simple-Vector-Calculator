@@ -5,7 +5,7 @@ TARGET = vCalc
 
 TARGET_DEL = vCalc.exe
 
-SRCS = main.cpp vector2D.cpp
+SRCS = main.cpp vector.cpp
 
 OBJS = $(SRCS:.cpp=.o)
 

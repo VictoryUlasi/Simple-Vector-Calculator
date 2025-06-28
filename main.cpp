@@ -9,17 +9,28 @@
 #include <conio.h>   // For getch() to capture keyboard input
 #include "vector.hpp"
 
-#define UPPER_MENU_BOUND 5
+#define UPPER_MENU_BOUND 6
 #define LOWER_MENU_BOUND 0
 
 struct selectionResult
 {
-    Vector2D resultantVector;
+    Vector2D resultantVector2D_;
+    Vector3D resultantVector3D_;
     int resultantScalar;
     bool isScalar = false;
+    bool is3D = false;
 };
 
-std::pair<int, int> readVector(std::string &line);
+struct vectorInput
+{
+    Vector2D vector2D_;
+    Vector3D vector3D_;
+    int x, y, z;
+    bool is3D = false;
+};
+
+vectorInput readVector(std::string &line);
+void setVector(vectorInput &vector);
 bool checkNum(std::string &element);
 void displayMenu();
 selectionResult performSelection(int userSelection);
@@ -55,9 +66,18 @@ int main()
             }
             else
             {
-                ClearScreen();
-                std::cout << "Resultant Vector: " << "[" << result.resultantVector.x << ", " << result.resultantVector.y << "]" << std::endl;
-                _getch();
+                if (result.is3D)
+                {
+                    ClearScreen();
+                    std::cout << "Resultant Vector: " << "[" << result.resultantVector3D_.x << ", " << result.resultantVector3D_.y << ", " << result.resultantVector3D_.z << "]" << std::endl;
+                    _getch();
+                }
+                else
+                {
+                    ClearScreen();
+                    std::cout << "Resultant Vector: " << "[" << result.resultantVector2D_.x << ", " << result.resultantVector2D_.y << "]" << std::endl;
+                    _getch();
+                }
             }
 
             std::cin.clear();
@@ -68,10 +88,12 @@ int main()
     return 0;
 }
 
-std::pair<int, int> readVector(std::string &line)
+vectorInput readVector(std::string &line)
 {
+    vectorInput vector;
     std::string x1;
     std::string x2;
+    std::string x3;
 
     std::stringstream ss(line);
 
@@ -81,15 +103,43 @@ std::pair<int, int> readVector(std::string &line)
         std::cout << "Enter Integers Only!";
         exit(EXIT_FAILURE);
     }
+    vector.x = std::stoi(x1);
 
-    std::getline(ss, x2);
+    std::getline(ss, x2, ' ');
     if (!checkNum(x2))
     {
         std::cout << "Enter Integers Only!";
         exit(EXIT_FAILURE);
     }
+    vector.y = std::stoi(x2);
 
-    return {std::stoi(x1), std::stoi(x2)};
+    if (std::getline(ss, x3, ' '))
+    {
+        if (!checkNum(x2))
+        {
+            std::cout << "Enter Integers Only!";
+            exit(EXIT_FAILURE);
+        }
+        vector.z = std::stoi(x3);
+        vector.is3D = true;
+    }
+    setVector(vector);
+    return vector;
+}
+
+void setVector(vectorInput &vector)
+{
+    if (vector.is3D)
+    {
+        vector.vector3D_.x = vector.x;
+        vector.vector3D_.y = vector.y;
+        vector.vector3D_.z = vector.z;
+    }
+    else
+    {
+        vector.vector2D_.x = vector.x;
+        vector.vector2D_.y = vector.y;
+    }
 }
 
 bool checkNum(std::string &element)
@@ -112,6 +162,7 @@ void displayMenu()
     std::cout << "2. Vector Subtraction" << std::endl;
     std::cout << "3. Vector Multiplication" << std::endl;
     std::cout << "4. Dot Product" << std::endl;
+    std::cout << "5. Cross Product (3D only)" << std::endl;
     std::cout << "0. Exit" << std::endl;
 }
 
@@ -119,61 +170,107 @@ selectionResult performSelection(int userSelection)
 {
     std::string line;
     selectionResult resultant;
-    Vector2D vectorUno;
-    Vector2D vectorDos;
+    vectorInput vectorUno;
+    vectorInput vectorDos;
     int scalar; // Used in case 3 and 4 for 2 different things
     switch (userSelection)
     {
     case 1:
         std::cout << "Enter the First vector: ";
         std::getline(std::cin, line);
-        vectorUno.x = readVector(line).first;
-        vectorUno.y = readVector(line).second;
+        vectorUno = readVector(line);
 
         std::cout << "Enter the Second vector: ";
         std::getline(std::cin, line);
-        vectorDos.x = readVector(line).first;
-        vectorDos.y = readVector(line).second;
+        vectorDos = readVector(line);
 
-        resultant.resultantVector = vectorUno + vectorDos;
+        if (vectorUno.is3D && vectorDos.is3D)
+        {
+            resultant.resultantVector3D_ = vectorUno.vector3D_ + vectorDos.vector3D_;
+            resultant.is3D = true;
+        }
+        else
+        {
+            resultant.resultantVector2D_ = vectorUno.vector2D_ + vectorDos.vector2D_;
+        }
+
         break;
     case 2:
         std::cout << "Enter the First vector: ";
         std::getline(std::cin, line);
-        vectorUno.x = readVector(line).first;
-        vectorUno.y = readVector(line).second;
+        vectorUno = readVector(line);
 
         std::cout << "Enter the Second vector: ";
         std::getline(std::cin, line);
-        vectorDos.x = readVector(line).first;
-        vectorDos.y = readVector(line).second;
+        vectorDos = readVector(line);
 
-        resultant.resultantVector = vectorUno - vectorDos;
+        if (vectorUno.is3D && vectorDos.is3D)
+        {
+            resultant.resultantVector3D_ = vectorUno.vector3D_ - vectorDos.vector3D_;
+            resultant.is3D = true;
+        }
+        else
+        {
+            resultant.resultantVector2D_ = vectorUno.vector2D_ - vectorDos.vector2D_;
+        }
+
         break;
     case 3:
         std::cout << "Enter the vector: ";
         std::getline(std::cin, line);
-        vectorUno.x = readVector(line).first;
-        vectorUno.y = readVector(line).second;
+        vectorUno = readVector(line);
 
         std::cout << "Enter the Scalar: ";
         std::cin >> scalar;
 
-        resultant.resultantVector = vectorUno * scalar;
+        if (vectorUno.is3D)
+        {
+            resultant.resultantVector3D_ = vectorUno.vector3D_ * scalar;
+            resultant.is3D = true;
+        }
+        else
+        {
+            resultant.resultantVector2D_ = vectorUno.vector2D_ * scalar;
+        }
+
         break;
     case 4:
         std::cout << "Enter the First vector: ";
         std::getline(std::cin, line);
-        vectorUno.x = readVector(line).first;
-        vectorUno.y = readVector(line).second;
+        vectorUno = readVector(line);
 
         std::cout << "Enter the Second vector: ";
         std::getline(std::cin, line);
-        vectorDos.x = readVector(line).first;
-        vectorDos.y = readVector(line).second;
+        vectorDos = readVector(line);
 
-        resultant.resultantScalar = vectorUno.dotProduct(vectorDos); // How to project this to screen? can only return pair
+        if (vectorUno.is3D && vectorDos.is3D)
+        {
+            resultant.resultantScalar = vectorUno.vector3D_.dotProduct(vectorDos.vector3D_);
+        }
+        else
+        {
+            resultant.resultantScalar = vectorUno.vector2D_.dotProduct(vectorDos.vector2D_);
+        }
+
         resultant.isScalar = true;
+        break;
+    case 5:
+        std::cout << "Enter the First vector: ";
+        std::getline(std::cin, line);
+        vectorUno = readVector(line);
+
+        std::cout << "Enter the Second vector: ";
+        std::getline(std::cin, line);
+        vectorDos = readVector(line);
+
+        if (vectorUno.is3D && vectorDos.is3D)
+        {
+            resultant.resultantVector3D_ = vectorUno.vector3D_.crossProduct(vectorDos.vector3D_);
+            resultant.is3D = true;
+        }
+        else
+            std::cout << "Cross Product Only On 3D vectors.";
+
         break;
     }
 
