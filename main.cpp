@@ -38,6 +38,7 @@ void setVector(vectorInput &vector);
 bool checkNum(std::string &element);
 void displayMenu();
 selectionResult performSelection(int userSelection);
+void processResult(int userSelection);
 void ClearScreen();
 
 int main()
@@ -59,42 +60,7 @@ int main()
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             userSelection = -1;
         }
-        if ((userSelection > LOWER_MENU_BOUND) && (userSelection < UPPER_MENU_BOUND)) // Check valid bounds
-        {
-            auto result = performSelection(userSelection); // Process option
-
-            if (result.errFlag.first) // Handle errors
-            {
-                std::cout << result.errFlag.second << std::endl;
-            }
-            else
-            {
-                if (result.isScalar) // Show scalar result
-                {
-                    ClearScreen();
-                    std::cout << "Resultant Scalar: " << "[" << result.resultantScalar << "]" << std::endl;
-                    _getch();
-                }
-                else
-                {
-                    if (result.is3D) // Show 3D vector result
-                    {
-                        ClearScreen();
-                        std::cout << "Resultant Vector: " << "[" << result.resultantVector3D_.x << ", " << result.resultantVector3D_.y << ", " << result.resultantVector3D_.z << "]" << std::endl;
-                        _getch();
-                    }
-                    else // Show 2D vector result
-                    {
-                        ClearScreen();
-                        std::cout << "Resultant Vector: " << "[" << result.resultantVector2D_.x << ", " << result.resultantVector2D_.y << "]" << std::endl;
-                        _getch();
-                    }
-                }
-            }
-
-            std::cin.clear();
-            std::cin.ignore(10000, '\n'); // Clear any extra input
-        }
+        processResult(userSelection);
 
     } while (userSelection != 0); // Repeat until user selects exit
     return 0;
@@ -328,6 +294,46 @@ selectionResult performSelection(int userSelection)
     }
 
     return resultant;
+}
+
+void processResult(int userSelection)
+{
+    if ((userSelection > LOWER_MENU_BOUND) && (userSelection < UPPER_MENU_BOUND)) // Check valid bounds
+    {
+        auto result = performSelection(userSelection); // Process option
+
+        if (result.errFlag.first) // Handle errors
+        {
+            std::cout << result.errFlag.second << std::endl;
+        }
+        else
+        {
+            if (result.isScalar) // Show scalar result
+            {
+                ClearScreen();
+                std::cout << "Resultant Scalar: " << "[" << result.resultantScalar << "]" << std::endl;
+                _getch();
+            }
+            else
+            {
+                if (result.is3D) // Show 3D vector result
+                {
+                    ClearScreen();
+                    std::cout << "Resultant Vector: " << "[" << result.resultantVector3D_.x << ", " << result.resultantVector3D_.y << ", " << result.resultantVector3D_.z << "]" << std::endl;
+                    _getch();
+                }
+                else // Show 2D vector result
+                {
+                    ClearScreen();
+                    std::cout << "Resultant Vector: " << "[" << result.resultantVector2D_.x << ", " << result.resultantVector2D_.y << "]" << std::endl;
+                    _getch();
+                }
+            }
+        }
+
+        std::cin.clear();
+        std::cin.ignore(10000, '\n'); // Clear any extra input
+    }
 }
 
 // Clears the console screen
