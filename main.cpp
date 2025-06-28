@@ -1,35 +1,38 @@
-#define NOMINMAX
+#define NOMINMAX // Prevents min/max macro conflicts on Windows
 #include <iostream>
 #include <vector>
 #include <string>
 #include <sstream>
 #include <utility>
 #include <limits>
-#include <Windows.h> // For ClearScreen()
-#include <conio.h>   // For getch() to capture keyboard input
-#include "vector.hpp"
+#include <Windows.h>  // For ClearScreen()
+#include <conio.h>    // For getch() to capture keyboard input
+#include "vector.hpp" // Custom vector class definitions
 
-#define UPPER_MENU_BOUND 6
-#define LOWER_MENU_BOUND 0
+#define UPPER_MENU_BOUND 6 // Upper bound for valid menu option
+#define LOWER_MENU_BOUND 0 // Lower bound for valid menu option
 
+// Structure to store the result of a menu operation
 struct selectionResult
 {
-    Vector2D resultantVector2D_;
-    Vector3D resultantVector3D_;
-    int resultantScalar;
-    bool isScalar = false;
-    bool is3D = false;
-    std::pair<bool, std::string> errFlag = {false, ""};
+    Vector2D resultantVector2D_;                        // Result for 2D vector
+    Vector3D resultantVector3D_;                        // Result for 3D vector
+    int resultantScalar;                                // Result for scalar
+    bool isScalar = false;                              // Flag: true if result is scalar
+    bool is3D = false;                                  // Flag: true if result is 3D vector
+    std::pair<bool, std::string> errFlag = {false, ""}; // Error flag and message
 };
 
+// Structure to store user vector input
 struct vectorInput
 {
-    Vector2D vector2D_;
-    Vector3D vector3D_;
-    int x, y, z;
-    bool is3D = false;
+    Vector2D vector2D_; // 2D vector
+    Vector3D vector3D_; // 3D vector
+    int x, y, z;        // Components
+    bool is3D = false;  // Flag: true if input is 3D
 };
 
+// Function prototypes
 vectorInput readVector(std::string &line);
 void setVector(vectorInput &vector);
 bool checkNum(std::string &element);
@@ -43,30 +46,30 @@ int main()
 
     do
     {
-        ClearScreen();
-        displayMenu();
+        ClearScreen(); // Clear console
+        displayMenu(); // Show menu options
 
         std::cout << "Option: ";
-        std::cin >> userSelection;
-        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        std::cin >> userSelection;                                          // Get user option
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Clear input buffer
 
-        while (!std::cin.good())
+        while (!std::cin.good()) // Validate input
         {
             std::cin.clear();
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             userSelection = -1;
         }
-        if ((userSelection > LOWER_MENU_BOUND) && (userSelection < UPPER_MENU_BOUND)) // IF YOU ADD MORE MENU ITEMS CHANGE THE BOUNDS :) TRASH IMPLEMENTATION IK
+        if ((userSelection > LOWER_MENU_BOUND) && (userSelection < UPPER_MENU_BOUND)) // Check valid bounds
         {
-            auto result = performSelection(userSelection);
+            auto result = performSelection(userSelection); // Process option
 
-            if (result.errFlag.first)
+            if (result.errFlag.first) // Handle errors
             {
                 std::cout << result.errFlag.second << std::endl;
             }
             else
             {
-                if (result.isScalar)
+                if (result.isScalar) // Show scalar result
                 {
                     ClearScreen();
                     std::cout << "Resultant Scalar: " << "[" << result.resultantScalar << "]" << std::endl;
@@ -74,13 +77,13 @@ int main()
                 }
                 else
                 {
-                    if (result.is3D)
+                    if (result.is3D) // Show 3D vector result
                     {
                         ClearScreen();
                         std::cout << "Resultant Vector: " << "[" << result.resultantVector3D_.x << ", " << result.resultantVector3D_.y << ", " << result.resultantVector3D_.z << "]" << std::endl;
                         _getch();
                     }
-                    else
+                    else // Show 2D vector result
                     {
                         ClearScreen();
                         std::cout << "Resultant Vector: " << "[" << result.resultantVector2D_.x << ", " << result.resultantVector2D_.y << "]" << std::endl;
@@ -90,13 +93,14 @@ int main()
             }
 
             std::cin.clear();
-            std::cin.ignore(10000, '\n');
+            std::cin.ignore(10000, '\n'); // Clear any extra input
         }
 
-    } while (userSelection != 0);
+    } while (userSelection != 0); // Repeat until user selects exit
     return 0;
 }
 
+// Reads a line input and converts to vectorInput
 vectorInput readVector(std::string &line)
 {
     vectorInput vector;
@@ -106,7 +110,7 @@ vectorInput readVector(std::string &line)
 
     std::stringstream ss(line);
 
-    std::getline(ss, x1, ' ');
+    std::getline(ss, x1, ' '); // Get x
     if (!checkNum(x1))
     {
         std::cout << "Enter Integers Only!" << std::endl;
@@ -114,7 +118,7 @@ vectorInput readVector(std::string &line)
     }
     vector.x = std::stoi(x1);
 
-    std::getline(ss, x2, ' ');
+    std::getline(ss, x2, ' '); // Get y
     if (!checkNum(x2))
     {
         std::cout << "Enter Integers Only!" << std::endl;
@@ -122,7 +126,7 @@ vectorInput readVector(std::string &line)
     }
     vector.y = std::stoi(x2);
 
-    if (std::getline(ss, x3, ' '))
+    if (std::getline(ss, x3, ' ')) // Get z if exists
     {
         if (!checkNum(x3))
         {
@@ -132,10 +136,11 @@ vectorInput readVector(std::string &line)
         vector.z = std::stoi(x3);
         vector.is3D = true;
     }
-    setVector(vector);
+    setVector(vector); // Populate vector2D_ or vector3D_
     return vector;
 }
 
+// Sets Vector2D or Vector3D values based on is3D flag
 void setVector(vectorInput &vector)
 {
     if (vector.is3D)
@@ -151,9 +156,10 @@ void setVector(vectorInput &vector)
     }
 }
 
+// Checks if input string is a valid integer
 bool checkNum(std::string &element)
 {
-    for (auto &i : element) // Use a regular for loop to check if - sign is in the first position, that is i has to be 0 because negative can only be in  the first position
+    for (auto &i : element) // Check each char: must be digit or '-'
     {
         if (!isdigit(i) && i != '-')
         {
@@ -163,9 +169,9 @@ bool checkNum(std::string &element)
     return true;
 }
 
+// Displays the main calculator menu
 void displayMenu()
 {
-    // Display the available options in the menu
     std::cout << "----SIMPLE VECTOR CALCULATOR----" << std::endl;
     std::cout << "1. Vector Addition" << std::endl;
     std::cout << "2. Vector Subtraction" << std::endl;
@@ -175,16 +181,18 @@ void displayMenu()
     std::cout << "0. Exit" << std::endl;
 }
 
+// Processes the selected menu option
 selectionResult performSelection(int userSelection)
 {
     std::string line;
     selectionResult resultant;
     vectorInput vectorUno;
     vectorInput vectorDos;
-    int scalar; // Used in case 3 and 4 for 2 different things
+    int scalar; // For scalar multiplication or dot product
+
     switch (userSelection)
     {
-    case 1:
+    case 1: // Vector Addition
         std::cout << "Enter the First vector: ";
         std::getline(std::cin, line);
         vectorUno = readVector(line);
@@ -201,7 +209,7 @@ selectionResult performSelection(int userSelection)
 
         if (!resultant.errFlag.first)
         {
-            if (vectorUno.is3D && vectorDos.is3D) // repetetive, errFlag already checks if vectors are the same, But Works for now.
+            if (vectorUno.is3D && vectorDos.is3D)
             {
                 resultant.resultantVector3D_ = vectorUno.vector3D_ + vectorDos.vector3D_;
                 resultant.is3D = true;
@@ -213,7 +221,7 @@ selectionResult performSelection(int userSelection)
         }
 
         break;
-    case 2:
+    case 2: // Vector Subtraction
         std::cout << "Enter the First vector: ";
         std::getline(std::cin, line);
         vectorUno = readVector(line);
@@ -230,7 +238,7 @@ selectionResult performSelection(int userSelection)
 
         if (!resultant.errFlag.first)
         {
-            if (vectorUno.is3D && vectorDos.is3D) // repetetive, errFlag already checks if vectors are the same, But Works for now.
+            if (vectorUno.is3D && vectorDos.is3D)
             {
                 resultant.resultantVector3D_ = vectorUno.vector3D_ - vectorDos.vector3D_;
                 resultant.is3D = true;
@@ -242,7 +250,7 @@ selectionResult performSelection(int userSelection)
         }
 
         break;
-    case 3:
+    case 3: // Scalar Multiplication
         std::cout << "Enter the vector: ";
         std::getline(std::cin, line);
         vectorUno = readVector(line);
@@ -261,7 +269,7 @@ selectionResult performSelection(int userSelection)
         }
 
         break;
-    case 4:
+    case 4: // Dot Product
         std::cout << "Enter the First vector: ";
         std::getline(std::cin, line);
         vectorUno = readVector(line);
@@ -278,7 +286,7 @@ selectionResult performSelection(int userSelection)
 
         if (!resultant.errFlag.first)
         {
-            if (vectorUno.is3D && vectorDos.is3D) // repetetive, errFlag already checks if vectors are the same, But Works for now.
+            if (vectorUno.is3D && vectorDos.is3D)
             {
                 resultant.resultantScalar = vectorUno.vector3D_.dotProduct(vectorDos.vector3D_);
             }
@@ -290,7 +298,7 @@ selectionResult performSelection(int userSelection)
         }
 
         break;
-    case 5:
+    case 5: // Cross Product (3D only)
         std::cout << "Enter the First vector: ";
         std::getline(std::cin, line);
         vectorUno = readVector(line);
@@ -307,7 +315,7 @@ selectionResult performSelection(int userSelection)
 
         if (!resultant.errFlag.first)
         {
-            if (vectorUno.is3D && vectorDos.is3D) // repetetive, errFlag already checks if vectors are the same, But Works for now.
+            if (vectorUno.is3D && vectorDos.is3D)
             {
                 resultant.resultantVector3D_ = vectorUno.vector3D_.crossProduct(vectorDos.vector3D_);
                 resultant.is3D = true;
@@ -322,27 +330,29 @@ selectionResult performSelection(int userSelection)
     return resultant;
 }
 
+// Clears the console screen
 void ClearScreen()
 {
-    HANDLE hStdOut;                  // Handle to the standard output
-    CONSOLE_SCREEN_BUFFER_INFO csbi; // Console screen buffer info
-    DWORD count;                     // Number of cells written to
-    DWORD cellCount;                 // Total number of cells in the console
-    COORD homeCoords = {0, 0};       // Home coordinates to move cursor to top left
+    HANDLE hStdOut;                  // Handle to standard output
+    CONSOLE_SCREEN_BUFFER_INFO csbi; // Info about console buffer
+    DWORD count;                     // Characters written
+    DWORD cellCount;                 // Total cells in console
+    COORD homeCoords = {0, 0};       // Top-left corner
 
-    hStdOut = GetStdHandle(STD_OUTPUT_HANDLE); // Get handle to console output
+    hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
     if (hStdOut == INVALID_HANDLE_VALUE)
         return;
 
-    if (!GetConsoleScreenBufferInfo(hStdOut, &csbi)) // Get buffer info
-        return;
-    cellCount = csbi.dwSize.X * csbi.dwSize.Y; // Calculate total cell count
-
-    if (!FillConsoleOutputCharacter(hStdOut, (TCHAR)' ', cellCount, homeCoords, &count)) // Fill console with spaces
+    if (!GetConsoleScreenBufferInfo(hStdOut, &csbi))
         return;
 
-    if (!FillConsoleOutputAttribute(hStdOut, csbi.wAttributes, cellCount, homeCoords, &count)) // Reset attributes
+    cellCount = csbi.dwSize.X * csbi.dwSize.Y;
+
+    if (!FillConsoleOutputCharacter(hStdOut, (TCHAR)' ', cellCount, homeCoords, &count))
         return;
 
-    SetConsoleCursorPosition(hStdOut, homeCoords); // Move cursor to top-left corner
+    if (!FillConsoleOutputAttribute(hStdOut, csbi.wAttributes, cellCount, homeCoords, &count))
+        return;
+
+    SetConsoleCursorPosition(hStdOut, homeCoords);
 }
