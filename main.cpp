@@ -2,6 +2,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <tuple>
 #include <sstream>
 #include <utility>
 #include <limits>
@@ -9,7 +10,7 @@
 #include <conio.h>    // For getch() to capture keyboard input
 #include "vector.hpp" // Custom vector class definitions
 
-#define UPPER_MENU_BOUND 6 // Upper bound for valid menu option
+#define UPPER_MENU_BOUND 8 // Upper bound for valid menu option
 #define LOWER_MENU_BOUND 0 // Lower bound for valid menu option
 
 // Structure to store the result of a menu operation
@@ -17,7 +18,7 @@ struct selectionResult
 {
     Vector2D resultantVector2D_;                        // Result for 2D vector
     Vector3D resultantVector3D_;                        // Result for 3D vector
-    int resultantScalar;                                // Result for scalar
+    double resultantScalar = 0.0;                       // Result for scalar
     bool isScalar = false;                              // Flag: true if result is scalar
     bool is3D = false;                                  // Flag: true if result is 3D vector
     std::pair<bool, std::string> errFlag = {false, ""}; // Error flag and message
@@ -26,10 +27,10 @@ struct selectionResult
 // Structure to store user vector input
 struct vectorInput
 {
-    Vector2D vector2D_; // 2D vector
-    Vector3D vector3D_; // 3D vector
-    int x, y, z;        // Components
-    bool is3D = false;  // Flag: true if input is 3D
+    Vector2D vector2D_;   // 2D vector
+    Vector3D vector3D_;   // 3D vector
+    double x, y, z = 0.0; // Components
+    bool is3D = false;    // Flag: true if input is 3D
 };
 
 // Function prototypes
@@ -39,7 +40,7 @@ bool checkNum(std::string &element);
 void displayMenu();
 selectionResult performSelection(int userSelection);
 std::pair<vectorInput, vectorInput> readTwoVectors();
-int readScalar();
+double readScalar();
 bool haveSameDimensions(const vectorInput &v1, const vectorInput &v2);
 void processResult(int userSelection);
 void ClearScreen();
@@ -84,24 +85,24 @@ vectorInput readVector(std::string &line)
         std::cout << "Enter Integers Only!" << std::endl;
         exit(EXIT_FAILURE);
     }
-    vector.x = std::stoi(x1);
+    vector.x = std::stod(x1);
 
     std::getline(ss, x2, ' '); // Get y
     if (!checkNum(x2))
     {
-        std::cout << "Enter Integers Only!" << std::endl;
+        std::cout << "Enter Real Numbers Only!" << std::endl;
         exit(EXIT_FAILURE);
     }
-    vector.y = std::stoi(x2);
+    vector.y = std::stod(x2);
 
     if (std::getline(ss, x3, ' ')) // Get z if exists
     {
         if (!checkNum(x3))
         {
-            std::cout << "Enter Integers Only!" << std::endl;
+            std::cout << "Enter Real Numbers Only!" << std::endl;
             exit(EXIT_FAILURE);
         }
-        vector.z = std::stoi(x3);
+        vector.z = std::stod(x3);
         vector.is3D = true;
     }
     setVector(vector); // Populate vector2D_ or vector3D_
@@ -127,10 +128,19 @@ void setVector(vectorInput &vector)
 // Checks if input string is a valid integer
 bool checkNum(std::string &element)
 {
-    for (auto &i : element) // Check each char: must be digit or '-'
+    for (unsigned int i = 0; i < element.length(); i++)
     {
-        if (!isdigit(i) && i != '-')
+        if (!isdigit(element.at(i)))
         {
+            if (element.at(i) == '.')
+            {
+                continue;
+            }
+            if (element.at(i) == '-' && i == 0)
+            {
+                continue;
+            }
+
             return false;
         }
     }
@@ -146,6 +156,8 @@ void displayMenu()
     std::cout << "3. Vector Multiplication" << std::endl;
     std::cout << "4. Dot Product" << std::endl;
     std::cout << "5. Cross Product (3D only)" << std::endl;
+    std::cout << "6. Magnitude" << std::endl;
+    std::cout << "7. Angle Between Vectors" << std::endl;
     std::cout << "0. Exit" << std::endl;
 }
 
@@ -155,7 +167,7 @@ selectionResult performSelection(int userSelection)
     selectionResult resultant;
     vectorInput firstVector;
     vectorInput secondVector;
-    int scalar; // For scalar multiplication or dot product
+    double scalar; // For scalar multiplication or dot product
 
     switch (userSelection)
     {
@@ -270,6 +282,44 @@ selectionResult performSelection(int userSelection)
         }
 
         break;
+    case 6:
+    {
+        std::string line;
+        std::cout << "Enter the vector: ";
+        std::getline(std::cin, line);
+        firstVector = readVector(line);
+
+        if (firstVector.is3D)
+        {
+            resultant.resultantScalar = firstVector.vector3D_.magnitude();
+        }
+        else
+            resultant.resultantScalar = firstVector.vector2D_.magnitude();
+
+        resultant.isScalar = true;
+        break;
+    }
+    case 7:
+        std::tie(firstVector, secondVector) = readTwoVectors();
+
+        if (!haveSameDimensions(firstVector, secondVector))
+        {
+            resultant.errFlag.first = true;
+            resultant.errFlag.second = "Vectors Have to Be the Same Dimensions";
+        }
+        else
+        {
+            if (firstVector.is3D)
+            {
+                resultant.resultantScalar = firstVector.vector3D_.angleBetween(secondVector.vector3D_);
+            }
+            else
+            {
+                resultant.resultantScalar = firstVector.vector2D_.angleBetween(secondVector.vector2D_);
+            }
+        }
+        resultant.isScalar = true;
+        break;
     }
 
     return resultant;
@@ -292,9 +342,9 @@ std::pair<vectorInput, vectorInput> readTwoVectors()
     return {v1, v2};
 }
 
-int readScalar()
+double readScalar()
 {
-    int scalar;
+    double scalar;
     while (true)
     {
         std::cout << "Enter The Scalar: ";
