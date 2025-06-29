@@ -38,6 +38,9 @@ void setVector(vectorInput &vector);
 bool checkNum(std::string &element);
 void displayMenu();
 selectionResult performSelection(int userSelection);
+std::pair<vectorInput, vectorInput> readTwoVectors();
+int readScalar();
+bool haveSameDimensions(const vectorInput &v1, const vectorInput &v2);
 void processResult(int userSelection);
 void ClearScreen();
 
@@ -51,10 +54,9 @@ int main()
         displayMenu(); // Show menu options
 
         std::cout << "Option: ";
-        std::cin >> userSelection;                                          // Get user option
-        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Clear input buffer
+        std::cin >> userSelection; // Get user option
 
-        while (!std::cin.good()) // Validate input
+        if (!std::cin.good()) // Validate input
         {
             std::cin.clear();
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
@@ -150,24 +152,17 @@ void displayMenu()
 // Processes the selected menu option
 selectionResult performSelection(int userSelection)
 {
-    std::string line;
     selectionResult resultant;
-    vectorInput vectorUno;
-    vectorInput vectorDos;
+    vectorInput firstVector;
+    vectorInput secondVector;
     int scalar; // For scalar multiplication or dot product
 
     switch (userSelection)
     {
     case 1: // Vector Addition
-        std::cout << "Enter the First vector: ";
-        std::getline(std::cin, line);
-        vectorUno = readVector(line);
+        std::tie(firstVector, secondVector) = readTwoVectors();
 
-        std::cout << "Enter the Second vector: ";
-        std::getline(std::cin, line);
-        vectorDos = readVector(line);
-
-        if ((vectorUno.is3D && !vectorDos.is3D) || (!vectorUno.is3D && vectorDos.is3D))
+        if (!haveSameDimensions(firstVector, secondVector))
         {
             resultant.errFlag.first = true;
             resultant.errFlag.second = "Vectors Have to Be the Same Dimensions";
@@ -175,28 +170,22 @@ selectionResult performSelection(int userSelection)
 
         if (!resultant.errFlag.first)
         {
-            if (vectorUno.is3D && vectorDos.is3D)
+            if (firstVector.is3D)
             {
-                resultant.resultantVector3D_ = vectorUno.vector3D_ + vectorDos.vector3D_;
+                resultant.resultantVector3D_ = firstVector.vector3D_ + secondVector.vector3D_;
                 resultant.is3D = true;
             }
             else
             {
-                resultant.resultantVector2D_ = vectorUno.vector2D_ + vectorDos.vector2D_;
+                resultant.resultantVector2D_ = firstVector.vector2D_ + secondVector.vector2D_;
             }
         }
 
         break;
     case 2: // Vector Subtraction
-        std::cout << "Enter the First vector: ";
-        std::getline(std::cin, line);
-        vectorUno = readVector(line);
+        std::tie(firstVector, secondVector) = readTwoVectors();
 
-        std::cout << "Enter the Second vector: ";
-        std::getline(std::cin, line);
-        vectorDos = readVector(line);
-
-        if ((vectorUno.is3D && !vectorDos.is3D) || (!vectorUno.is3D && vectorDos.is3D))
+        if (!haveSameDimensions(firstVector, secondVector))
         {
             resultant.errFlag.first = true;
             resultant.errFlag.second = "Vectors Have to Be the Same Dimensions";
@@ -204,47 +193,43 @@ selectionResult performSelection(int userSelection)
 
         if (!resultant.errFlag.first)
         {
-            if (vectorUno.is3D && vectorDos.is3D)
+            if (firstVector.is3D)
             {
-                resultant.resultantVector3D_ = vectorUno.vector3D_ - vectorDos.vector3D_;
+                resultant.resultantVector3D_ = firstVector.vector3D_ - secondVector.vector3D_;
                 resultant.is3D = true;
             }
             else
             {
-                resultant.resultantVector2D_ = vectorUno.vector2D_ - vectorDos.vector2D_;
+                resultant.resultantVector2D_ = firstVector.vector2D_ - secondVector.vector2D_;
             }
         }
 
         break;
     case 3: // Scalar Multiplication
+    {       // Squiggly Brackets needed here to declare line in scope of case 3,
+        std::string line;
         std::cout << "Enter the vector: ";
         std::getline(std::cin, line);
-        vectorUno = readVector(line);
+        firstVector = readVector(line);
 
-        std::cout << "Enter the Scalar: ";
-        std::cin >> scalar;
+        scalar = readScalar();
 
-        if (vectorUno.is3D)
+        if (firstVector.is3D)
         {
-            resultant.resultantVector3D_ = vectorUno.vector3D_ * scalar;
+            resultant.resultantVector3D_ = firstVector.vector3D_ * scalar;
             resultant.is3D = true;
         }
         else
         {
-            resultant.resultantVector2D_ = vectorUno.vector2D_ * scalar;
+            resultant.resultantVector2D_ = firstVector.vector2D_ * scalar;
         }
 
         break;
+    }
     case 4: // Dot Product
-        std::cout << "Enter the First vector: ";
-        std::getline(std::cin, line);
-        vectorUno = readVector(line);
+        std::tie(firstVector, secondVector) = readTwoVectors();
 
-        std::cout << "Enter the Second vector: ";
-        std::getline(std::cin, line);
-        vectorDos = readVector(line);
-
-        if ((vectorUno.is3D && !vectorDos.is3D) || (!vectorUno.is3D && vectorDos.is3D))
+        if (!haveSameDimensions(firstVector, secondVector))
         {
             resultant.errFlag.first = true;
             resultant.errFlag.second = "Vectors Have to Be the Same Dimensions";
@@ -252,28 +237,22 @@ selectionResult performSelection(int userSelection)
 
         if (!resultant.errFlag.first)
         {
-            if (vectorUno.is3D && vectorDos.is3D)
+            if (firstVector.is3D)
             {
-                resultant.resultantScalar = vectorUno.vector3D_.dotProduct(vectorDos.vector3D_);
+                resultant.resultantScalar = firstVector.vector3D_.dotProduct(secondVector.vector3D_);
             }
             else
             {
-                resultant.resultantScalar = vectorUno.vector2D_.dotProduct(vectorDos.vector2D_);
+                resultant.resultantScalar = firstVector.vector2D_.dotProduct(secondVector.vector2D_);
             }
             resultant.isScalar = true;
         }
 
         break;
     case 5: // Cross Product (3D only)
-        std::cout << "Enter the First vector: ";
-        std::getline(std::cin, line);
-        vectorUno = readVector(line);
+        std::tie(firstVector, secondVector) = readTwoVectors();
 
-        std::cout << "Enter the Second vector: ";
-        std::getline(std::cin, line);
-        vectorDos = readVector(line);
-
-        if ((vectorUno.is3D && !vectorDos.is3D) || (!vectorUno.is3D && vectorDos.is3D))
+        if (!haveSameDimensions(firstVector, secondVector))
         {
             resultant.errFlag.first = true;
             resultant.errFlag.second = "Vectors Have to Be the Same Dimensions";
@@ -281,9 +260,9 @@ selectionResult performSelection(int userSelection)
 
         if (!resultant.errFlag.first)
         {
-            if (vectorUno.is3D && vectorDos.is3D)
+            if (firstVector.is3D)
             {
-                resultant.resultantVector3D_ = vectorUno.vector3D_.crossProduct(vectorDos.vector3D_);
+                resultant.resultantVector3D_ = firstVector.vector3D_.crossProduct(secondVector.vector3D_);
                 resultant.is3D = true;
             }
             else
@@ -296,8 +275,53 @@ selectionResult performSelection(int userSelection)
     return resultant;
 }
 
+std::pair<vectorInput, vectorInput> readTwoVectors()
+{
+    std::string line;
+    vectorInput v1;
+    vectorInput v2;
+
+    std::cout << "Enter the First vector: ";
+    std::getline(std::cin, line);
+    v1 = readVector(line);
+
+    std::cout << "Enter the Second vector: ";
+    std::getline(std::cin, line);
+    v2 = readVector(line);
+
+    return {v1, v2};
+}
+
+int readScalar()
+{
+    int scalar;
+    while (true)
+    {
+        std::cout << "Enter The Scalar: ";
+        std::cin >> scalar;
+
+        if (std::cin.good())
+        {
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            return scalar;
+        }
+        else
+        {
+            std::cin.clear();
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            std::cout << "Please enter a valid integer.\n";
+        }
+    }
+}
+
+bool haveSameDimensions(const vectorInput &v1, const vectorInput &v2)
+{
+    return (v1.is3D == v2.is3D);
+}
+
 void processResult(int userSelection)
 {
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     if ((userSelection > LOWER_MENU_BOUND) && (userSelection < UPPER_MENU_BOUND)) // Check valid bounds
     {
         auto result = performSelection(userSelection); // Process option
