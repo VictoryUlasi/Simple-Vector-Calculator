@@ -126,26 +126,18 @@ void setVector(vectorInput &vector)
     }
 }
 
-// Checks if input string is a valid integer
+// Checks if input string is a valid double
 bool checkNum(std::string &element)
 {
-    for (unsigned int i = 0; i < element.length(); i++)
+    try
     {
-        if (!isdigit(element.at(i)))
-        {
-            if (element.at(i) == '.')
-            {
-                continue;
-            }
-            if (element.at(i) == '-' && i == 0)
-            {
-                continue;
-            }
-
-            return false;
-        }
+        std::stod(element);
+        return true;
     }
-    return true;
+    catch (const std::invalid_argument &)
+    {
+        return false;
+    }
 }
 
 // Displays the main calculator menu
