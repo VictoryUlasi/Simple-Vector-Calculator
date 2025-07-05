@@ -14,6 +14,7 @@ public:
     double dotProduct(const Vector2D &other) const;
     double magnitude() const;
     double angleBetween(const Vector2D &other) const;
+    Vector2D normalize() const;
 };
 
 class Vector3D
@@ -31,4 +32,5 @@ public:
     Vector3D crossProduct(const Vector3D &other) const; // Yields a vector that is orthogonal to the 2 Input Vectors
     double magnitude() const;
     double angleBetween(const Vector3D &other) const;
+    Vector3D normalize() const;
 };

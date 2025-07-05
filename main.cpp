@@ -9,8 +9,9 @@
 #include <Windows.h>  // For ClearScreen()
 #include <conio.h>    // For getch() to capture keyboard input
 #include "vector.hpp" // Custom vector class definitions
+#include <fstream>
 
-#define UPPER_MENU_BOUND 8 // Upper bound for valid menu option
+#define UPPER_MENU_BOUND 9 // Upper bound for valid menu option
 #define LOWER_MENU_BOUND 0 // Lower bound for valid menu option
 
 // Structure to store the result of a menu operation
@@ -34,6 +35,7 @@ struct vectorInput
 };
 
 // Function prototypes
+
 vectorInput readVector(std::string &line);
 void setVector(vectorInput &vector);
 bool checkNum(std::string &element);
@@ -64,7 +66,6 @@ int main()
             userSelection = -1;
         }
         processResult(userSelection);
-
     } while (userSelection != 0); // Repeat until user selects exit
     return 0;
 }
@@ -158,6 +159,8 @@ void displayMenu()
     std::cout << "5. Cross Product (3D only)" << std::endl;
     std::cout << "6. Magnitude" << std::endl;
     std::cout << "7. Angle Between Vectors" << std::endl;
+    std::cout << "8. Plot Two Vectors" << std::endl;
+
     std::cout << "0. Exit" << std::endl;
 }
 
@@ -320,6 +323,49 @@ selectionResult performSelection(int userSelection)
         }
         resultant.isScalar = true;
         break;
+    case 8:
+        std::ofstream vectorFile("vectors.txt", std::ios::out);
+        std::tie(firstVector, secondVector) = readTwoVectors();
+
+        if (!haveSameDimensions(firstVector, secondVector))
+        {
+            resultant.errFlag.first = true;
+            resultant.errFlag.second = "Vectors Have to Be the Same Dimensions";
+        }
+        else
+        {
+            firstVector.vector3D_ = firstVector.vector3D_.normalize();
+            secondVector.vector3D_ = secondVector.vector3D_.normalize();
+
+            firstVector.vector2D_ = firstVector.vector2D_.normalize();
+            secondVector.vector2D_ = secondVector.vector2D_.normalize();
+
+            if (firstVector.is3D)
+            {
+                vectorFile << firstVector.vector3D_.x << "," << firstVector.vector3D_.y << ',' << firstVector.vector3D_.z << std::endl;
+            }
+            else
+            {
+                vectorFile << firstVector.vector2D_.x << "," << firstVector.vector2D_.y << std::endl;
+            }
+
+            if (secondVector.is3D)
+            {
+                vectorFile << secondVector.vector3D_.x << "," << secondVector.vector3D_.y << ',' << secondVector.vector3D_.z << std::endl;
+                vectorFile << '3';
+            }
+            else
+            {
+                vectorFile << secondVector.vector2D_.x << "," << secondVector.vector2D_.y << std::endl;
+                vectorFile << '2';
+            }
+
+            resultant.errFlag.first = true;
+            resultant.errFlag.second = "Sent to Matlab";
+        }
+
+        vectorFile.close();
+        break;
     }
 
     return resultant;
@@ -378,6 +424,7 @@ void processResult(int userSelection)
 
         if (result.errFlag.first) // Handle errors
         {
+            ClearScreen();
             std::cout << result.errFlag.second << std::endl;
         }
         else

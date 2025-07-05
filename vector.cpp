@@ -4,8 +4,6 @@
 #include <numbers>
 #include "vector.hpp"
 
-const long double pi = 3.14159265358979323846;
-
 // 2D VECTORS
 Vector2D::Vector2D() {};
 Vector2D::Vector2D(double x, double y) : x(x), y(y) {}
@@ -48,7 +46,13 @@ double Vector2D::magnitude() const
 double Vector2D::angleBetween(const Vector2D &other) const
 {
     double resultantAngle = acos((this->dotProduct(other)) / ((this->magnitude()) * (other.magnitude())));
-    return resultantAngle * (180 / pi); // convert from radians to degrees
+    return resultantAngle * (180 / M_PI); // convert from radians to degrees
+}
+
+Vector2D Vector2D::normalize() const
+{
+    double magnitude = this->magnitude();
+    return Vector2D((x / magnitude), (y / magnitude));
 }
 
 // 3D VECTORS
@@ -101,5 +105,11 @@ double Vector3D::magnitude() const
 double Vector3D::angleBetween(const Vector3D &other) const
 {
     double resultantAngle = acos((this->dotProduct(other)) / ((this->magnitude()) * (other.magnitude())));
-    return resultantAngle * (180 / pi);
+    return resultantAngle * (180 / M_PI);
+}
+
+Vector3D Vector3D::normalize() const
+{
+    double magnitude = this->magnitude();
+    return Vector3D((x / magnitude), (y / magnitude), (z / magnitude));
 }
